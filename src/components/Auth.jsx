@@ -96,6 +96,25 @@ export default function Auth({ onLogin }) {
             />
           )}
 
+          {/* Demo Mode Info */}
+          {message && message.text && message.text.includes('demo mode') && (
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
+              <div className="flex items-start space-x-3">
+                <div className="text-blue-500 text-lg">ℹ️</div>
+                <div>
+                  <h4 className="text-sm font-semibold text-blue-800 mb-1">Demo Mode Active</h4>
+                  <p className="text-xs text-blue-700">
+                    External services are temporarily unavailable. You can explore the app using:
+                  </p>
+                  <ul className="text-xs text-blue-700 mt-2 list-disc list-inside">
+                    <li>Email: demo@example.com</li>
+                    <li>Password: password123</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="space-y-6">
             {!isLogin && (
               <div>

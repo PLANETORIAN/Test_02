@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { connectToDatabase, collections } from '@/lib/mongodb';
+import { connectToDatabase } from '@/lib/mongodb';
 import { createToken } from '@/lib/jwt';
 
 export async function POST(request) {
@@ -14,11 +14,10 @@ export async function POST(request) {
       );
     }
 
-    const { db } = await connectToDatabase();
-    const usersCollection = db.collection(collections.users);
+    const { users } = await connectToDatabase();
 
     // Check if user already exists
-    const existingUser = await usersCollection.findOne({ email });
+    const existingUser = await users.findOne({ email });
     if (existingUser) {
       return NextResponse.json(
         { error: 'User already exists with this email' },
@@ -40,7 +39,7 @@ export async function POST(request) {
       updatedAt: new Date()
     };
 
-    const result = await usersCollection.insertOne(newUser);
+    const result = await users.insertOne(newUser);
 
     // Create JWT token
     const userForToken = {
@@ -60,6 +59,15 @@ export async function POST(request) {
 
   } catch (error) {
     console.error('Registration error:', error);
+    
+    // Handle specific MongoDB connection errors
+    if (error.message.includes('EREFUSED') || error.message.includes('queryTxt')) {
+      return NextResponse.json(
+        { error: 'Database temporarily unavailable. Please try again later.' },
+        { status: 503 }
+      );
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

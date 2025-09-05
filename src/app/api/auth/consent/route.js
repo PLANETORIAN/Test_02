@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
-import { connectToDatabase, collections } from '@/lib/mongodb';
+import { connectToDatabase } from '@/lib/mongodb';
 import { verifyToken, getTokenFromAuthHeader } from '@/lib/jwt';
 
 export async function POST(request) {
@@ -35,11 +35,10 @@ export async function POST(request) {
       );
     }
 
-    const { db } = await connectToDatabase();
-    const usersCollection = db.collection(collections.users);
+    const { users } = await connectToDatabase();
 
     // Update user consent
-    const result = await usersCollection.updateOne(
+    const result = await users.updateOne(
       { _id: new ObjectId(decoded.id) },
       { 
         $set: { 

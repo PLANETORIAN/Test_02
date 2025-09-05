@@ -1,8 +1,12 @@
 import { NextResponse } from 'next/server';
 
-const AMADEUS_BASE_URL = 'https://test.api.amadeus.com';
-const API_KEY = 'uNDDAsA9TTnfaOA6AIPKv6PmuhDofGh0';
-const API_SECRET = 'GFRUZPDGQqOmA9uV';
+const AMADEUS_BASE_URL = process.env.AMADEUS_BASE_URL || 'https://test.api.amadeus.com';
+const API_KEY = process.env.AMADEUS_API_KEY;
+const API_SECRET = process.env.AMADEUS_API_SECRET;
+
+if (!API_KEY || !API_SECRET) {
+  console.error('Amadeus API credentials not found in environment variables');
+}
 
 let accessToken = null;
 let tokenExpiry = null;
@@ -54,6 +58,48 @@ export async function GET(request) {
       );
     }
 
+    // Check if API credentials are available
+    if (!API_KEY || !API_SECRET) {
+      console.warn('Amadeus API credentials not configured, using fallback data');
+      const fallbackDestinations = [
+        {
+          id: 'PAR',
+          name: 'Paris',
+          iataCode: 'CDG',
+          address: { countryCode: 'FR', countryName: 'France', cityName: 'Paris' },
+          subType: 'CITY',
+          detailedName: 'Paris, France'
+        },
+        {
+          id: 'LON',
+          name: 'London',
+          iataCode: 'LHR',
+          address: { countryCode: 'GB', countryName: 'United Kingdom', cityName: 'London' },
+          subType: 'CITY',
+          detailedName: 'London, United Kingdom'
+        },
+        {
+          id: 'NYC',
+          name: 'New York',
+          iataCode: 'JFK',
+          address: { countryCode: 'US', countryName: 'United States', cityName: 'New York' },
+          subType: 'CITY',
+          detailedName: 'New York, United States'
+        }
+      ];
+
+      const filtered = fallbackDestinations.filter(dest => 
+        dest.name.toLowerCase().includes(keyword.toLowerCase()) ||
+        dest.detailedName.toLowerCase().includes(keyword.toLowerCase())
+      );
+
+      return NextResponse.json({
+        destinations: filtered,
+        meta: { count: filtered.length },
+        fallback: true
+      }, { status: 200 });
+    }
+
     const token = await getAccessToken();
     
     const params = new URLSearchParams({
@@ -72,10 +118,27 @@ export async function GET(request) {
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Amadeus API error:', response.status, errorText);
-      return NextResponse.json(
-        { error: 'Failed to search destinations', details: errorText },
-        { status: response.status }
-      );
+      
+      // Return fallback data on API error
+      const fallbackDestinations = [
+        {
+          id: 'PAR',
+          name: 'Paris',
+          iataCode: 'CDG',
+          address: { countryCode: 'FR', countryName: 'France', cityName: 'Paris' },
+          subType: 'CITY',
+          detailedName: 'Paris, France'
+        }
+      ];
+
+      return NextResponse.json({
+        destinations: fallbackDestinations.filter(dest => 
+          dest.name.toLowerCase().includes(keyword.toLowerCase())
+        ),
+        meta: { count: 1 },
+        fallback: true,
+        error: 'API temporarily unavailable'
+      }, { status: 200 });
     }
 
     const data = await response.json();
@@ -104,9 +167,24 @@ export async function GET(request) {
 
   } catch (error) {
     console.error('Destination search error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error', message: error.message },
-      { status: 500 }
-    );
+    
+    // Return fallback data on any error
+    const fallbackDestinations = [
+      {
+        id: 'PAR',
+        name: 'Paris',
+        iataCode: 'CDG',
+        address: { countryCode: 'FR', countryName: 'France', cityName: 'Paris' },
+        subType: 'CITY',
+        detailedName: 'Paris, France'
+      }
+    ];
+
+    return NextResponse.json({
+      destinations: fallbackDestinations,
+      meta: { count: 1 },
+      fallback: true,
+      error: 'Service temporarily unavailable'
+    }, { status: 200 });
   }
 }

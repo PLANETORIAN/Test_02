@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { ObjectId } from 'mongodb';
-import { connectToDatabase, collections } from '@/lib/mongodb';
+import { connectToDatabase } from '@/lib/mongodb';
 import { verifyToken, getTokenFromAuthHeader } from '@/lib/jwt';
 
 export async function GET(request) {
@@ -26,21 +26,29 @@ export async function GET(request) {
       );
     }
 
-    const { db } = await connectToDatabase();
-    const tripsCollection = db.collection(collections.trips);
+    const { trips } = await connectToDatabase();
 
     // Fetch user's trips, sorted by start date (newest first)
-    const trips = await tripsCollection
+    const userTrips = await trips
       .find({ userId: new ObjectId(decoded.id) })
       .sort({ startDate: -1 })
       .toArray();
 
     return NextResponse.json({
-      trips
+      trips: userTrips
     }, { status: 200 });
 
   } catch (error) {
     console.error('Fetch trips error:', error);
+    
+    // Handle specific MongoDB connection errors
+    if (error.message.includes('EREFUSED') || error.message.includes('queryTxt')) {
+      return NextResponse.json(
+        { error: 'Database temporarily unavailable. Please try again later.' },
+        { status: 503 }
+      );
+    }
+    
     return NextResponse.json(
       { error: 'Internal server error' },
       { status: 500 }

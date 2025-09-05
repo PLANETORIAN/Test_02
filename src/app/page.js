@@ -3,15 +3,22 @@
 import { useState, useEffect } from 'react';
 import Auth from '@/components/Auth';
 import ConsentScreen from '@/components/ConsentScreen';
+import BookingPlatform from '@/components/BookingPlatform';
+import IntelligentTripBuilder from '@/components/IntelligentTripBuilder';
+import CartModal from '@/components/CartModal';
 import TripForm from '@/components/TripForm';
 import TripTimeline from '@/components/TripTimeline';
 import LoadingSpinner from '@/components/LoadingSpinner';
+import SystemStatus from '@/components/SystemStatus';
 
 export default function Home() {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showTripForm, setShowTripForm] = useState(false);
   const [tripRefreshTrigger, setTripRefreshTrigger] = useState(0);
+  const [viewMode, setViewMode] = useState('booking'); // 'booking', 'smart-trip', or 'data-collector'
+  const [cart, setCart] = useState([]);
+  const [showCartModal, setShowCartModal] = useState(false);
 
   useEffect(() => {
     // Check for existing authentication on component mount
@@ -48,6 +55,19 @@ export default function Home() {
     localStorage.removeItem('user');
     setUser(null);
     setShowTripForm(false);
+    setCart([]);
+  };
+
+  const addToCart = (item) => {
+    setCart(prev => [...prev, { ...item, id: Date.now() + Math.random() }]);
+  };
+
+  const removeFromCart = (itemId) => {
+    setCart(prev => prev.filter(item => item.id !== itemId));
+  };
+
+  const clearCart = () => {
+    setCart([]);
   };
 
   const handleConsent = (consentGiven) => {
@@ -130,35 +150,90 @@ export default function Home() {
                 </svg>
               </div>
               <div>
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">NATPAC Travel Tracker</h1>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                  {viewMode === 'booking' ? 'Travel Booking Platform' : 
+                   viewMode === 'smart-trip' ? 'AI Trip Planner' : 'NATPAC Travel Tracker'}
+                </h1>
                 <p className="text-sm text-gray-600">Welcome back, <span className="font-semibold">{user.name}</span>! 👋</p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <button
-                onClick={() => setShowTripForm(!showTripForm)}
-                className={`inline-flex items-center py-3 px-6 rounded-xl font-semibold transition-all duration-200 shadow-lg transform hover:scale-105 ${
-                  showTripForm
-                    ? 'bg-gradient-to-r from-gray-600 to-gray-700 text-white hover:from-gray-700 hover:to-gray-800'
-                    : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700'
-                } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
-              >
-                {showTripForm ? (
-                  <>
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                    View Timeline
-                  </>
-                ) : (
-                  <>
-                    <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    Add Trip
-                  </>
-                )}
-              </button>
+              {/* View Mode Toggle */}
+              <div className="flex bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode('booking')}
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                    viewMode === 'booking'
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  🛒 Book Travel
+                </button>
+                <button
+                  onClick={() => setViewMode('smart-trip')}
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                    viewMode === 'smart-trip'
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  🧠 AI Trip
+                </button>
+                <button
+                  onClick={() => setViewMode('data-collector')}
+                  className={`px-3 py-2 rounded-md text-sm font-medium transition-colors duration-200 ${
+                    viewMode === 'data-collector'
+                      ? 'bg-white text-blue-600 shadow-sm'
+                      : 'text-gray-600 hover:text-gray-900'
+                  }`}
+                >
+                  📊 Track Data
+                </button>
+              </div>
+
+              {/* Cart Button */}
+              {(viewMode === 'booking' || viewMode === 'smart-trip') && (
+                <button
+                  onClick={() => setShowCartModal(true)}
+                  className="relative p-3 text-gray-600 hover:text-blue-600 transition-colors bg-gray-100 rounded-lg hover:bg-gray-200"
+                >
+                  🛒
+                  {cart.length > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                      {cart.length}
+                    </span>
+                  )}
+                </button>
+              )}
+
+              {viewMode === 'data-collector' && (
+                <button
+                  onClick={() => setShowTripForm(!showTripForm)}
+                  className={`inline-flex items-center py-3 px-6 rounded-xl font-semibold transition-all duration-200 shadow-lg transform hover:scale-105 ${
+                    showTripForm
+                      ? 'bg-gradient-to-r from-gray-600 to-gray-700 text-white hover:from-gray-700 hover:to-gray-800'
+                      : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700'
+                  } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500`}
+                >
+                  {showTripForm ? (
+                    <>
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                      View Timeline
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                      Add Trip
+                    </>
+                  )}
+                </button>
+              )}
+              
               <a
                 href="/destinations"
                 className="inline-flex items-center py-3 px-6 rounded-xl font-semibold transition-all duration-200 shadow-lg transform hover:scale-105 bg-gradient-to-r from-green-600 to-emerald-600 text-white hover:from-green-700 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 no-underline"
@@ -181,19 +256,47 @@ export default function Home() {
       </header>
 
       {/* Main Content */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="transition-all duration-300">
-          {showTripForm ? (
-            <TripForm onTripAdded={handleTripAdded} />
-          ) : (
-            <TripTimeline refreshTrigger={tripRefreshTrigger} />
-          )}
-        </div>
+      <main>
+        {viewMode === 'booking' ? (
+          <BookingPlatform user={user} onAddToCart={addToCart} />
+        ) : viewMode === 'smart-trip' ? (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <IntelligentTripBuilder onAddToCart={addToCart} />
+          </div>
+        ) : (
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="transition-all duration-300">
+              {showTripForm ? (
+                <TripForm onTripAdded={handleTripAdded} />
+              ) : (
+                <TripTimeline refreshTrigger={tripRefreshTrigger} />
+              )}
+            </div>
+          </div>
+        )}
       </main>
+
+      {/* Cart Modal */}
+      <CartModal
+        cart={cart}
+        isOpen={showCartModal}
+        onClose={() => setShowCartModal(false)}
+        onRemoveItem={removeFromCart}
+        onBookAll={() => {
+          alert(`Successfully booked ${cart.length} items!`);
+          clearCart();
+          setShowCartModal(false);
+        }}
+      />
 
       {/* Footer */}
       <footer className="bg-white/80 backdrop-blur-sm border-t border-gray-200/50 mt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* System Status */}
+          <div className="mb-6">
+            <SystemStatus />
+          </div>
+          
           <div className="text-center">
             <div className="flex justify-center items-center mb-4">
               <div className="h-8 w-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center mr-3 shadow-lg">
@@ -201,10 +304,10 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 3c2.755 0 5.455.232 8.083.678.533.09.917.556.917 1.096v1.044a2.25 2.25 0 01-.659 1.591l-5.432 5.432a2.25 2.25 0 00-.659 1.591v2.927a2.25 2.25 0 01-1.244 2.013L9.75 21v-6.568a2.25 2.25 0 00-.659-1.591L3.659 7.409A2.25 2.25 0 013 5.818V4.774c0-.54.384-1.006.917-1.096A48.32 48.32 0 0112 3z" />
                 </svg>
               </div>
-              <span className="text-lg font-semibold text-gray-700">NATPAC Travel Data Collector</span>
+              <span className="text-lg font-semibold text-gray-700">Travel Platform</span>
             </div>
-            <p className="text-sm text-gray-500 mb-2">© 2025 NATPAC Travel Data Collector. All rights reserved.</p>
-            <p className="text-xs text-gray-400">Your travel data is securely stored and used for research purposes only. 🔒</p>
+            <p className="text-sm text-gray-500 mb-2">© 2025 Travel Platform. All rights reserved.</p>
+            <p className="text-xs text-gray-400">Book your perfect journey with ease. 🔒</p>
           </div>
         </div>
       </footer>

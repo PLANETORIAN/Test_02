@@ -1,4 +1,43 @@
-# NATPAC Modular Travel Data Collector
+# Travel Booking Platform
+
+A comprehensive travel booking and itinerary management platform built with Next.js, featuring flight, hotel, train, and activity bookings with complete trip planning capabilities.
+
+## Features
+
+### 🛒 **Booking Platform**
+- **Flight Booking**: Search and book domestic and international flights with multiple class options
+- **Hotel Booking**: Browse and reserve accommodations with detailed amenities and ratings
+- **Train Booking**: Book train tickets with various class options and real-time availability
+- **Activity Booking**: Discover and book local activities, tours, and experiences
+- **Shopping Cart**: Add multiple bookings to cart and checkout together
+- **Payment Processing**: Secure payment handling with booking confirmations
+
+### 📋 **Itinerary Management**
+- **Itinerary Builder**: Create comprehensive travel itineraries from booked items
+- **Trip Timeline**: Organize bookings by date and time
+- **Export Functionality**: Export itineraries for offline use
+- **Booking History**: View all past and upcoming bookings
+
+### 🔐 **User Management**
+- **User Authentication**: Secure email/password registration and login with JWT tokens
+- **Data Collection Consent**: GDPR-compliant consent management
+- **Profile Management**: Manage user preferences and booking history
+
+### 🎯 **Destination Discovery**
+- **Popular Destinations**: Browse trending travel destinations
+- **Amadeus Integration**: Real-time destination search and information
+- **Activity Recommendations**: Discover local attractions and experiences
+
+### 📊 **Travel Data Collection (Legacy)**
+- **Trip Data Collection**: Comprehensive trip information tracking
+- **Travel Timeline**: Visual chronological display of past travels
+- **Data Analytics**: Travel pattern analysis and insights
+
+### 🎨 **Modern UI/UX**
+- **Mobile-First Design**: Fully responsive design optimized for all devices
+- **Modern Interface**: Clean, intuitive design with smooth animations
+- **Dark/Light Themes**: Customizable appearance options
+- **Accessibility**: WCAG-compliant interface designular Travel Data Collector
 
 A single-page, frontend-heavy web application for collecting travel data built with Next.js and React. The application features a modular, component-based architecture designed for performance and maintainability.
 
@@ -14,12 +53,15 @@ A single-page, frontend-heavy web application for collecting travel data built w
 ## Tech Stack
 
 - **Framework**: Next.js 15 with App Router
-- **Frontend**: React.js with JSX
-- **Styling**: Tailwind CSS
+- **Frontend**: React.js with JSX and modern hooks
+- **Styling**: Tailwind CSS with custom animations
 - **Backend**: Node.js API routes within Next.js
 - **Authentication**: JWT (JSON Web Tokens)
-- **Database**: MongoDB
-- **Password Hashing**: bcryptjs
+- **Database**: MongoDB with comprehensive schemas
+- **Password Hashing**: bcryptjs for secure authentication
+- **External APIs**: Amadeus Travel API for real-time data
+- **Payment**: Secure booking and payment processing
+- **State Management**: React hooks for efficient state handling
 
 ## Project Structure
 
@@ -99,7 +141,43 @@ src/
 }
 ```
 
-### Trips Collection
+### Bookings Collection
+```javascript
+{
+  _id: ObjectId,
+  userId: ObjectId (reference to users),
+  items: Array [
+    {
+      type: String, // 'flight', 'hotel', 'train', 'activity'
+      name: String,
+      price: Number,
+      date: Date,
+      // Type-specific fields...
+    }
+  ],
+  itinerary: Object {
+    title: String,
+    destination: String,
+    startDate: Date,
+    endDate: Date,
+    notes: String
+  },
+  totalAmount: Number,
+  bookingType: String, // 'complete', 'partial'
+  status: String, // 'confirmed', 'cancelled', 'pending'
+  paymentStatus: String, // 'paid', 'pending', 'failed'
+  paymentDetails: Object {
+    method: String,
+    transactionId: String,
+    paidAt: Date
+  },
+  bookingReference: String (unique),
+  createdAt: Date,
+  updatedAt: Date
+}
+```
+
+### Trips Collection (Legacy)
 ```javascript
 {
   _id: ObjectId,
